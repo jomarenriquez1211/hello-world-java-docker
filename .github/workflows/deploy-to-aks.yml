@@ -1,0 +1,36 @@
+name: Deploy to AKS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+
+      - name: Build with Maven
+        run: mvn clean package
+
+      - name: Set up kubectl
+        uses: azure/kubectl@1
+        with:
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+          version: 'latest'
+
+      - name: Deploy to AKS
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+        run: |
+          echo "$KUBE_CONFIG_DATA" | base64 -d > kubeconfig
+          kubectl apply -f manifests/deployment.yaml
+          kubectl apply -f manifests/service.yaml
