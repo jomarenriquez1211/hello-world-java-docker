@@ -1,0 +1,20 @@
+trigger:
+  - main  # Change this to your branch
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: Maven@3
+    inputs:
+      mavenPomFile: 'pom.xml'
+      goals: 'package'
+
+  - task: Docker@2
+    inputs:
+      containerRegistry: 'mycrsample'  # Azure Container Registry service connection name
+      repository: '<acr-name>.azurecr.io/my-java-app'
+      command: 'buildAndPush'
+      Dockerfile: '**/Dockerfile'
+      tags: |
+        $(Build.BuildId)
